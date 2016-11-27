@@ -1,18 +1,37 @@
-clear all;
-close all;
-clc;
+%% Face Detection and Tracking Using CAMShift
+% This example shows how to automatically detect and track a face.
+%
+%  Copyright 2014 The MathWorks, Inc.
 
-obj=videoinput('winvideo');       %一般的家用摄像头第三个参数这样就可以，不能运行直接去掉第三个参数也可以
-h1=preview(obj);                 %预览视频，同时获取句柄  
-h2=figure(2);                    %新建显示图像figure,同时获取句柄
-faceDetector = vision.CascadeObjectDetector();
-while ishandle(h1) && ishandle(h2)              %两个句柄有一个关闭就结束程序
-     frame=getsnapshot(obj);     %捕获图像
-    frame=rgb2gray(frame);     %转成彩色,这个frame就可以按照自己意愿处理了
-    bbox = faceDetector.step(frame);
-    videoOut = insertObjectAnnotation(frame,'rectangle',bbox,'Face');
-    imshow(frame);              %显示图像
-    drawnow;                    % 实时更新图像
+%% Introduction
+% Object detection and tracking are important in many computer vision
+% applications including activity recognition, automotive safety, and
+% surveillance. In this example, you will develop a simple face tracking
+% system by dividing the tracking problem into three separate problems:
+%
+% # Detect a face to track
+% # Identify facial features to track
+% # Track the face
+
+%% Step 1: Detect a Face To Track
+% Before you begin tracking a face, you need to first detect it. Use the
+% |vision.CascadeObjectDetector| to detect the location of a face in a
+% video frame. The cascade object detector uses the Viola-Jones detection
+% algorithm and a trained classification model for detection. By default,
+% the detector is configured to detect faces, but it can be configured for
+% other object types.
+videoFileReader = videoinput('winvideo');
+while true
+    % Create a cascade detector object.
+    faceDetector = vision.CascadeObjectDetector();
+    bbox = [];
+    while size(bbox,2) == 0
+        videoFrame      = getsnapshot(videoFileReader);
+        bbox            = step(faceDetector, videoFrame);
+    end
+    % Draw the returned bounding box around the detected face.
+    videoOut = insertObjectAnnotation(videoFrame,'rectangle',bbox,'Face');
+    imshow(videoOut), title('Detected face');
 end
-
-delete(obj);                %删除对象
+% Release resources
+delete(videoFileReader);
